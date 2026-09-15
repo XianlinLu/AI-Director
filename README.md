@@ -46,6 +46,7 @@ Lumina Canvas 使用节点、连接、组件和 Agent 组织多模态工作流�
 - **生成与验收形成闭环**：每次媒体生成都有调用前条件、结果复核、拒绝理由和重生成策略。
 - **从创意语言落到生产语言**：把“高级一点”“更有冲击”等模糊表达翻译成镜头、光影、节奏、声音和 Prompt 动作。
 - **能力缺失时安全降级**：未连接组件时交付可执行 Prompt 与清单，不虚构已生成或已保存的结果。
+- **动态选题弹窗**：根据当前用户的真实想法生成四个可比较的选题方向，并提供 Other 自定义入口。
 
 ### 自动语言跟随
 
@@ -61,12 +62,30 @@ Skill 会在每个用户回合开始时自动识别主语言，并锁定为本�
 
 每个新回合都会重新检测语言，但单次执行过程中不会因为参考资料或工具返回了其他语言而中途切换。
 
+### 动态选题方向弹窗
+
+当 Brief 已经完整、但用户尚未确定具体选题时，Agent 会调用 Lumina 运行时提供的交互式单选能力，显示一个原生选题弹窗：
+
+- 每次只有一个选题问题。
+- 根据当前用户表明的产品、目标、受众、内容想法、渠道和限制实时生成四个选项。
+- 四个选项处于同一决策层级，但在洞察、叙事角度、产品角色或视觉钩子上真正不同。
+- 每项包含简短标题和一句可判断的说明。
+- 四个建议之外保留一个 **Other** 自由输入项，用户可以填写自己的选题。
+- 不使用固定选题库，也不会照搬参考图片中的示例文字。
+- 用户已明确给出唯一方向时不重复弹窗。
+- 用户选择后锁定 `TOPIC_DIRECTION`，后续提案、导演阐述和分镜只沿该方向发展。
+- 用户关闭或忽略弹窗时不会替用户默认选择。
+
+弹窗的标题、问题、四个选项、说明和 Other 占位提示都会遵守自动语言规则。英文请求显示英文 UI，日文请求显示日文 UI。
+
+> 原生弹窗需要当前 Lumina 环境向 Agent 暴露“用户选择 / 交互式提问 / 单选表单”能力。Skill 会按能力描述自动匹配工具；如果该能力不可用，才会回退为普通文本的四个选项加 Other。
+
 ### 核心能力
 
 | 阶段 | 能力 | 主要产物 |
 | --- | --- | --- |
 | Brief | 诊断信息缺口，先确认画幅并守住前置门槛 | 策略 Brief、待确认项、创意领地 |
-| Concept | 解释为什么这样拍，而不是提前堆镜头 | 客户提案、洞察、Creative Idea、Story Outline、KV |
+| Concept | 用动态弹窗锁定选题，再解释为什么这样拍 | 四个选题 + Other、客户提案、洞察、Creative Idea、Story Outline、KV |
 | Treatment | 把批准的创意变成导演语言和视觉证据 | 导演阐述、mood frame、人物/场景/产品设定 |
 | PPM | 把创意和执行选择变成可开会确认的制作包 | PPM、物料、风险、客户确认项 |
 | Storyboard | 用导演级方法拆解情绪、叙事和镜头 | 精确时间码分镜表、高潮与结尾记忆点 |
@@ -194,6 +213,7 @@ The original implementation in this repository gives a Lumina Agent a focused **
 - **Closed-loop generation QA:** every media call has preconditions, acceptance checks, rejection reasons, and regeneration guidance.
 - **Creative language becomes production action:** vague notes such as “more premium” or “more impactful” are translated into camera, lighting, pacing, sound, and prompt changes.
 - **Safe capability fallback:** when a component is missing, the Agent returns executable prompts and action lists instead of fabricating tool results.
+- **Dynamic topic selector:** four relevant, comparable topic directions are generated from the user's actual intent, with an Other field for a custom choice.
 
 ### Automatic language following
 
@@ -209,12 +229,30 @@ At the start of every user turn, the Skill detects the dominant request language
 
 Language is detected again on each new turn, but it remains locked during a single execution even when references or tool outputs use another language.
 
+### Dynamic topic-direction dialog
+
+When the brief is complete but the user has not selected a specific topic, the Agent invokes Lumina's interactive single-choice capability to display a native selection dialog:
+
+- One topic question is shown at a time.
+- Four options are generated dynamically from the user's product, objective, audience, stated idea, channel, and constraints.
+- All four options are comparable at the same decision level while differing meaningfully in insight, narrative angle, product role, or visual hook.
+- Each option has a concise label and a one-sentence explanation.
+- A separate **Other** field lets the user enter a custom topic.
+- The Agent does not use a fixed topic library or copy example wording from reference images.
+- The dialog is skipped when the user has already specified one clear direction.
+- After submission, the selection is locked as `TOPIC_DIRECTION`; downstream concept, treatment, and storyboard work follows only that direction.
+- Dismissing the dialog never causes the Agent to choose on the user's behalf.
+
+The dialog header, question, option labels, descriptions, and Other placeholder follow the automatic language policy. English requests produce English UI; Japanese requests produce Japanese UI.
+
+> The native dialog requires the Lumina runtime to expose a user-choice, interactive-question, or single-select form capability to the Agent. The Skill matches that capability by description. It falls back to four text options plus Other only when no interactive capability is available.
+
 ### Capabilities
 
 | Stage | What the Agent does | Primary output |
 | --- | --- | --- |
 | Brief | Diagnoses missing inputs and confirms aspect ratio first | Strategic brief, open questions, creative territories |
-| Concept | Explains why the film should be made this way | Client proposal, insight, idea, story outline, KV direction |
+| Concept | Locks the topic through a dynamic dialog, then explains why the film should be made this way | Four topics + Other, client proposal, insight, idea, story outline, KV direction |
 | Treatment | Turns an approved idea into directing choices and visual evidence | Director treatment, mood frames, character/scene/product studies |
 | PPM | Converts approved choices into a production-ready meeting pack | PPM, materials, risks, approval items |
 | Storyboard | Designs emotion, narrative, visual language, and exact timing | Timecoded shot table, climax, closing memory beat |

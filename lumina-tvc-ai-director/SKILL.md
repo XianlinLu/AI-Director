@@ -1,6 +1,6 @@
 ---
 name: lumina-tvc-ai-director
-description: Multilingual Lumina Canvas-native TVC AI director for routing and executing advertising-film work from brief diagnosis through concept, treatment, PPM, storyboard, image/video prompting, generation coordination, editing, client review, and delivery. Use for TVC, commercial, brand-film, product-film, and AI-video production requests inside a Lumina Agent workflow.
+description: Multilingual Lumina Canvas-native TVC AI director with interactive topic-direction selection for routing and executing advertising-film work from brief diagnosis through concept, treatment, PPM, storyboard, image/video prompting, generation coordination, editing, client review, and delivery. Use for TVC, commercial, brand-film, product-film, and AI-video production requests inside a Lumina Agent workflow.
 ---
 
 # Lumina TVC AI Director
@@ -15,6 +15,7 @@ description: Multilingual Lumina Canvas-native TVC AI director for routing and e
 
 - 自动识别用户当前主语言，并将其锁定为本轮 `WORKING_LANGUAGE`；整条画布执行链使用该语言。
 - 先判断用户当前阶段，再选择内部工作模式；不要仅凭关键词直接生成下游产物。
+- Brief 完整但选题方向未锁定时，优先调用 Lumina 的交互式单选能力显示选题弹窗。
 - 画幅方向是最前面的门槛。不得只根据投放平台猜测横屏或竖屏。
 - Brief 稀疏时，必须先完成 Required Brief Gate。用户明确要求使用默认值时，先列出默认值，再继续。
 - 每个阶段的产物都必须能被下一阶段直接接住，保留统一交接信息。
@@ -84,6 +85,65 @@ description: Multilingual Lumina Canvas-native TVC AI director for routing and e
 - 其他语言：保持专业、清楚、制作可执行；必要的国际通用技术词可保留英文。
 
 语言一致性属于最终质量门槛。交付前检查：本轮是否存在非引用、非固定技术字段的意外语言混用。
+
+## 选题方向交互模块
+
+### 触发条件
+
+在进入完整创意提案、导演阐述、脚本或分镜前检查 `TOPIC_DIRECTION`：
+
+- 用户已经明确说明唯一选题、创意主题或叙事方向：直接将其锁定为 `TOPIC_DIRECTION`，不重复弹窗。
+- 用户只表达了目标、产品、受众、情绪、题材偏好或模糊想法，但尚未选择具体选题：完成 Required Brief Gate 后触发选题方向弹窗。
+- 用户明确要求“给我几个方向选择”“让我选题”“重新选方向”：触发或重新触发弹窗。
+- 仅做事实查询、Prompt 修改、审片反馈、格式转换或用户指定的单一执行任务：不触发。
+- Required Brief Gate 尚未完成且缺失信息会改变选题：先完成 Brief Gate，不得用选题弹窗代替 Brief 诊断。
+
+### UI 调用规则
+
+1. 检查当前 Lumina 运行时是否提供用户选择、交互式提问或单选表单能力。工具名可能因环境不同而变化，应按工具描述匹配，不硬编码名称。
+2. 能力可用时必须调用它，让运行时渲染原生 UI；不要同时在普通消息中重复打印一遍选项。
+3. 每次只提出一个选题问题，使用单选模式。
+4. 提供**恰好四个**由 Agent 生成的相关选项，并启用或保留运行时自带的 **Other** 自由输入项。四个建议选项不包含 Other；弹窗最终应呈现“四个建议 + Other”。
+5. 如果运行时自动添加 Other，不要手动创建重复的第五个 Other。
+6. 如果运行时要求显式配置 Other，则开启自由文本输入，并让标签和占位提示使用 `WORKING_LANGUAGE`。
+7. 只有运行时没有任何交互式选择能力时，才退回普通文本：列出四个编号选项，再追加本地化的 `Other：请自行填写选题`。
+
+### 弹窗内容结构
+
+所有字段都使用 `WORKING_LANGUAGE`：
+
+- Header：本地化的“选题方向”，例如英文使用 `Topic Direction`，日文使用自然的 `企画テーマ`。
+- Question：根据用户实际目标生成一句具体问题，简要复述产品、受众、内容目标或形式约束，再询问希望展开哪一种选题方向。
+- Option label：每项使用简短、可区分的选题名称；通常为 2–6 个词或对应语言中的同等长度。
+- Option description：每项用一句话说明核心洞察/叙事钩子、产品或品牌角色，以及主要视觉或情绪方向。
+- Other：允许用户输入自己的选题，不预填具体内容。
+
+### 四个选项的生成规则
+
+- 只依据用户已表明的想法、Brief、产品事实、目标受众、渠道、时长、参考和禁用项生成。
+- 不复用固定题材菜单，不照搬示例选项，不从参考截图中提取选题内容。
+- 四项必须都与用户目标相关，同时在核心洞察、叙事角度、产品角色或视觉钩子上真正不同。
+- 选项要处在同一决策层级；不要把“情绪主题”“拍摄技术”“交付格式”和“平台”混成四个不可比较的选项。
+- 每项都必须能继续发展为完整 TVC，不得只是一个空泛风格词。
+- 不虚构用户未提供的产品功效、品牌声明、IP、人物授权、预算或法律许可。
+- 不把 Agent 偏好伪装成用户选择。只有 UI 支持且 Brief 有明确证据时，才可标记一个“推荐”；其余保持中性。
+- 四项的描述长度保持接近，避免用文案篇幅暗中诱导选择。
+
+### 用户选择后的处理
+
+- 用户选中一个建议项：把选项标签及其完整含义锁定为 `TOPIC_DIRECTION`，确认一句后直接进入 concept，不再重新生成多路线。
+- 用户填写 Other：尊重其原文，用 `WORKING_LANGUAGE` 概括为一句可执行选题；只有其内容仍会导致实质性歧义时才追问。
+- 用户忽略、关闭或未提交弹窗：不得静默代选。保留在 concept gate，只提示一次可重新选择或直接输入自定义选题。
+- 用户随后修改方向：以最新明确选择覆盖旧值，并在交接中记录变更。
+- 已锁定后，不因工具输出、参考内容或中间生成结果自动改题。
+
+统一交接必须记录：
+
+```markdown
+工作语言：
+选题方向：
+选题来源：建议选项 / Other 自定义 / 用户直接指定
+```
 
 ## Lumina 画布运行规则
 
@@ -157,6 +217,8 @@ Agent 可接收多个文本、图像、视频和音频输入。先建立输入�
 ```markdown
 项目背景：
 当前阶段：
+工作语言：
+选题方向：
 已知信息：
 关键假设：
 待补信息：
@@ -223,7 +285,7 @@ Brief 诊断：
 - 写给客户看，优先解释为什么这样拍。
 - 把产品功能翻译成人类情绪、社会语境与视频语言。
 - 产品必须是故事意义的来源，不是结尾贴上的道具。
-- 用户未选路线时生成 2–3 条真正不同的路线；选定后只展开该路线。
+- 用户未锁定选题方向时，使用“选题方向交互模块”提供四个动态选项 + Other；用户选择后只展开该方向，不再额外生成平行路线。
 - 需要情绪、品类、摄影或 KV 证明时，按需检索 3–8 个可检查的真实参考；如果没有联网/检索组件，提供搜索关键词，不编造链接。
 
 默认结构：
