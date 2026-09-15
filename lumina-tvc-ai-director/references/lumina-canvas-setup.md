@@ -38,6 +38,12 @@ Brief / 品牌规范 / 客户反馈（Text） ─┐
 5. Max Iterations 设为足够完成“判断阶段 → 生成/调用 → 复核 → 输出交接”的步数。若只做 Brief 诊断，不需要为媒体生成预留迭代。
 6. 先用一个小 Brief 测试门槛是否生效，再测试单张图、单镜视频和完整多镜头流程。
 
+## 语言行为配置
+
+`SKILL.md` 会在每轮开始时自动确定 `WORKING_LANGUAGE`，不需要为中文、英文或日文建立不同 Agent。Task Prompt 不指定语言时，Agent 使用当前用户请求的主语言；明确指定语言时，以指定语言为准。
+
+语言锁定覆盖可见思考/执行摘要、阶段判断、Brief Gate、工具说明、生成参数中的自然语言、表格、复核、错误、重试和交接。品牌原文、客户原话、节点别名、固定参数和代码不会被误译。
+
 ## 输入节点命名
 
 建议使用稳定的英文别名，便于 Prompt 中引用：
@@ -131,6 +137,22 @@ Brief 已确认。请为分镜 03 生成 4 秒 9:16 图生视频，引用 @produ
 ```
 
 预期：Agent 进入 review 模式，区分内部判断与客户回复，并把反馈翻译为剪辑/Prompt/画面动作。
+
+### 4. 英文语言链测试
+
+```text
+Create a 15-second vertical skincare commercial. Start by checking whether the brief is complete, then plan the production workflow. Keep every visible planning step, tool explanation, table, prompt, review note, and handoff in English.
+```
+
+预期：除品牌原文、固定参数和节点别名外，画布全部可见过程与交付均为英文，不出现中文阶段标题或中文检查信息。
+
+### 5. 日文语言链测试
+
+```text
+20秒の横型飲料CMを企画してください。まずブリーフの不足情報を確認し、その後の制作工程を設計してください。
+```
+
+预期：可见思考/执行摘要、提问、组件调用说明、表格标题、Prompt、检查和交接均为自然日文；英文仅用于必要的固定技术词。
 
 ## 常见问题
 

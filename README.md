@@ -47,6 +47,20 @@ Lumina Canvas 使用节点、连接、组件和 Agent 组织多模态工作流�
 - **从创意语言落到生产语言**：把“高级一点”“更有冲击”等模糊表达翻译成镜头、光影、节奏、声音和 Prompt 动作。
 - **能力缺失时安全降级**：未连接组件时交付可执行 Prompt 与清单，不虚构已生成或已保存的结果。
 
+### 自动语言跟随
+
+Skill 会在每个用户回合开始时自动识别主语言，并锁定为本轮 `WORKING_LANGUAGE`。语言规则不仅作用于最终回答，还覆盖整条画布链路：
+
+- 用户使用英文时，可见思考/执行摘要、Brief Gate、组件调用说明、表格、Prompt、复核、错误和交接均使用英文。
+- 用户使用日文时，上述全部过程均使用自然、专业的日文。
+- 中文会继续跟随用户的简体或繁体。
+- 用户明确指定语言时，明确指令优先于自动识别。
+- 混合语言请求按“主要动作要求所使用的语言”判断，不会被品牌名、模型名、URL 或摄影术语误导。
+- 品牌 Slogan、包装文案、客户原话、`@` 节点别名、参数名和代码默认保留原文。
+- 如果某个生成组件只接受指定语言，只转换传入该组件的 Prompt；画布其他可见过程仍保持用户语言。
+
+每个新回合都会重新检测语言，但单次执行过程中不会因为参考资料或工具返回了其他语言而中途切换。
+
 ### 核心能力
 
 | 阶段 | 能力 | 主要产物 |
@@ -180,6 +194,20 @@ The original implementation in this repository gives a Lumina Agent a focused **
 - **Closed-loop generation QA:** every media call has preconditions, acceptance checks, rejection reasons, and regeneration guidance.
 - **Creative language becomes production action:** vague notes such as “more premium” or “more impactful” are translated into camera, lighting, pacing, sound, and prompt changes.
 - **Safe capability fallback:** when a component is missing, the Agent returns executable prompts and action lists instead of fabricating tool results.
+
+### Automatic language following
+
+At the start of every user turn, the Skill detects the dominant request language and locks it as the turn's `WORKING_LANGUAGE`. This applies to the entire visible canvas workflow, not only the final response:
+
+- An English request produces English visible planning/execution summaries, brief questions, component-call explanations, tables, prompts, QA notes, errors, and handoffs.
+- A Japanese request keeps the same complete chain in natural, professional Japanese.
+- Chinese follows the user's Simplified or Traditional script.
+- An explicit language instruction always overrides automatic detection.
+- Mixed-language requests follow the language carrying the main action, ignoring brand names, model names, URLs, and production terminology as switching signals.
+- Approved slogans, packaging copy, quoted client feedback, `@` node aliases, parameter names, and code remain unchanged by default.
+- If a generation component requires a specific prompt language, only the component prompt is translated; the rest of the visible workflow remains in the user's language.
+
+Language is detected again on each new turn, but it remains locked during a single execution even when references or tool outputs use another language.
 
 ### Capabilities
 
