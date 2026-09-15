@@ -2,6 +2,20 @@
 
 这份说明用于把 `lumina-tvc-ai-director/SKILL.md` 配置为 Lumina Canvas 的 Agent System Instructions，并为 Agent 连接可用组件。
 
+## 导入包格式
+
+导入时只选择 `lumina-tvc-ai-director` 文件夹，并保持 `SKILL.md` 位于这个文件夹的根目录。
+
+包内规则：
+
+- 允许扩展名：`.md`、`.txt`、`.json`、`.yaml`、`.yml`。
+- 扩展名必须小写；唯一例外是入口文件的固定名称 `SKILL.md` 中的大写文件名部分。
+- 文件和文件夹名只使用英文字母、数字、下划线和连字符，且不超过 64 个字符。
+- 不要加入 `.skillignore`、`.gitignore`、`.DS_Store`、无扩展名的 `LICENSE`、脚本、图片、压缩包或本地 Git 元数据。
+- 不要把整个本地 Git 工作目录作为 Skill 文件夹上传。
+
+本 Skill 目录只包含受支持的 Markdown 文件，不需要 `.skillignore`。如果打包工具自动生成 `.skillignore`，请在上传前从待导入文件夹中移除它。
+
 ## 推荐画布拓扑
 
 ```text
@@ -125,4 +139,3 @@ Brief 已确认。请为分镜 03 生成 4 秒 9:16 图生视频，引用 @produ
 - 产品包装漂移：把产品图设为唯一 `@product_reference`，在 Tool Description 和每镜 Prompt 中同时锁定包装与 Logo。
 - 多镜风格不一致：先生成全片一致性块，再按同场景/同人物/同产品批次生成；可用上一镜尾帧作为下一镜参考。
 - Prompt 过长被截断：保留引用、动作链、镜头、结束帧和负面约束，删除重复形容词与不影响画面的背景说明。
-

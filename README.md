@@ -6,7 +6,7 @@
 
 This repository provides a **Lumina Canvas Agent–ready TVC AI Director skill** that coordinates the complete advertising-film workflow—from brief diagnosis and creative development to treatment, PPM, storyboards, AI image/video prompts, generation management, editing, client review, and delivery.
 
-> 本项目严格保留并适配自 [guangjun5952/tvc-ai-director](https://github.com/guangjun5952/tvc-ai-director) 的工作流、门槛、输出结构与质量标准。原项目采用 MIT License；本仓库保留原版权声明。
+**AI Director for Lumina Canvas** 的核心作用，是把真实 TVC 团队分散在策略、创意、导演、制片、AI 生成、剪辑和审片中的判断，组织成一个可执行、可复核、可持续交接的画布 Agent 工作流。
 
 ## 中文介绍
 
@@ -14,7 +14,7 @@ This repository provides a **Lumina Canvas Agent–ready TVC AI Director skill**
 
 这不是一个“帮我写广告 Prompt”的单点提示词，而是一套运行在 Lumina Canvas 里的 TVC 制作控制系统。
 
-原项目由一个主路由 Skill、九个专业 Skill 和一个通用路由 Skill 组成。本适配版没有删掉这些专业能力，而是按照 Lumina Agent 的运行方式，把它们合并成一个总控 Agent 的九种内部工作模式：
+Skill 以一个总控 Agent 协调九种专业工作模式：
 
 ```text
 brief -> concept -> treatment -> ppm -> storyboard
@@ -27,14 +27,25 @@ Agent 会先识别当前阶段和缺失信息，再决定是输出策略、调�
 
 Lumina Canvas 使用节点、连接、组件和 Agent 组织多模态工作流。Agent 可以接收文本、图片、视频和音频，并把已连接的组件当作工具调用；System Instructions 决定它如何理解任务、选择工具和输出结果。
 
-这个版本针对这些机制做了以下适配：
+这个 Skill 围绕 Lumina 画布原生机制设计：
 
 - 将多个 `$tvc-*` 子 Skill 路由改为单 Agent 内部阶段路由。
 - 使用 `@brief`、`@product_reference`、`@character_reference`、`@scene_reference` 等节点引用保持上下文和素材连续性。
 - 将“工具可用时生成图片/视频”改成“只调用当前已连接的 Lumina 组件”，避免虚构执行结果。
 - 为图像生成、视频生成、多模态复核、图片合成、预览和保存提供了可直接复制的 Tool Description。
-- 保留原仓库的 10 项 Required Brief Gate、创意提案八段结构、导演视觉开发、PPM、分镜四步法、图片 Prompt 八层结构、Seedance-style 视频 Prompt、连续性管理、客户反馈翻译和全局质量门槛。
+- 内置 10 项 Required Brief Gate、创意提案八段结构、导演视觉开发、PPM、分镜四步法、图片 Prompt 八层结构、Seedance-style 视频 Prompt、连续性管理、客户反馈翻译和全局质量门槛。
 - 在没有电子表格组件时输出 Markdown/TSV；有对应组件时再执行工作簿导出。
+
+### 原创实现重点
+
+本仓库的原创实现重点不是再做一个通用内容机器人，而是赋予 Lumina Agent 一套“导演总控”职责：
+
+- **先判断，再制作**：双层路由门槛阻止 Agent 在关键信息缺失时盲目生成。
+- **一个 Agent，九种岗位能力**：策略、创意、导演、制片、分镜、Prompt、AI 制作、剪辑和审片共享同一项目上下文。
+- **画布素材有明确职责**：每个 `@` 引用都声明控制范围，降低人物、包装、Logo、场景和风格漂移。
+- **生成与验收形成闭环**：每次媒体生成都有调用前条件、结果复核、拒绝理由和重生成策略。
+- **从创意语言落到生产语言**：把“高级一点”“更有冲击”等模糊表达翻译成镜头、光影、节奏、声音和 Prompt 动作。
+- **能力缺失时安全降级**：未连接组件时交付可执行 Prompt 与清单，不虚构已生成或已保存的结果。
 
 ### 核心能力
 
@@ -75,6 +86,19 @@ Lumina Canvas 使用节点、连接、组件和 Agent 组织多模态工作流�
 4. 按需要连接文本生成、图像生成、视频生成、多模态理解、图片合成、预览与保存组件。
 5. 参考 [`lumina-canvas-setup.md`](lumina-tvc-ai-director/references/lumina-canvas-setup.md) 配置节点命名、Tool Description、验收和测试。
 
+### Lumina 导入格式规范
+
+为避免 “Some documents need to be processed / documents have not been uploaded” 报错，请遵守：
+
+- 只导入 `lumina-tvc-ai-director` 文件夹，不要直接上传包含开发文件的本地 Git 仓库目录。
+- Skill 包内只放 `.md`、`.txt`、`.json`、`.yaml` 或 `.yml` 文件。
+- 不要放入 `.skillignore`、`.gitignore`、`.DS_Store`、无扩展名文件、脚本、图片、ZIP 或其他格式。
+- 文件与文件夹名只能使用英文字母、数字、下划线 `_` 和连字符 `-`，长度不超过 64 个字符。
+- 扩展名必须是小写；入口文件必须准确命名为 `SKILL.md`。
+- `SKILL.md` 必须位于导入文件夹根目录，并且保留开头的 YAML frontmatter。
+
+本仓库的 `lumina-tvc-ai-director` 文件夹已按以上规则整理，内部只有受支持的 `.md` 文件。截图所示的 `.skillignore` 不属于本 Skill，也不应加入导入包。
+
 最小可用拓扑：
 
 ```text
@@ -106,7 +130,7 @@ Text / Image / Video / Audio inputs
 ```text
 .
 ├── README.md
-├── LICENSE
+├── LICENSE.md
 └── lumina-tvc-ai-director/
     ├── SKILL.md
     ├── assets/templates/
@@ -128,7 +152,7 @@ Text / Image / Video / Audio inputs
 
 This is not a one-shot “write me an ad prompt” preset. It is a TVC production control system designed to run as the central Agent in a Lumina Canvas workflow.
 
-The upstream project uses a main router, nine specialist skills, and a general routing skill. This adaptation preserves those specialties as nine internal operating modes inside one Lumina-native Agent:
+One central Agent coordinates nine specialist operating modes:
 
 ```text
 brief -> concept -> treatment -> ppm -> storyboard
@@ -137,14 +161,25 @@ brief -> concept -> treatment -> ppm -> storyboard
 
 The Agent identifies the current production stage, checks whether critical inputs are missing, and then decides whether to develop strategy, call connected image/video components, organize generation batches, or interpret client feedback. A shared handoff format keeps context intact across every stage.
 
-### Lumina-native adaptations
+### Lumina-native design
 
-- Replaces cross-skill `$tvc-*` delegation with internal stage routing suitable for a single Lumina Agent.
+- Uses internal stage routing suitable for a single Lumina Agent.
 - Uses `@` references for briefs, products, characters, scenes, style frames, videos, and audio on the canvas.
 - Calls only components actually connected to the Agent and never claims that media was generated or saved when the capability is absent.
 - Includes copy-ready tool descriptions for image generation, video generation, multimodal review, image composition, preview, and save components.
-- Preserves the upstream ten-question brief gate, eight-section proposal logic, visual treatment process, PPM coverage, four-step storyboard method, eight-layer image prompting, Seedance-style video prompting, continuity management, feedback translation, and final quality checks.
+- Includes a ten-question brief gate, eight-section proposal logic, visual treatment process, PPM coverage, four-step storyboard method, eight-layer image prompting, Seedance-style video prompting, continuity management, feedback translation, and final quality checks.
 - Falls back to Markdown tables or TSV when no spreadsheet component is available.
+
+### Original contribution
+
+The original implementation in this repository gives a Lumina Agent a focused **director-control** role instead of turning it into another generic content assistant:
+
+- **Decide before producing:** two routing gates prevent premature generation when critical inputs are missing.
+- **One Agent, nine disciplines:** strategy, creative, directing, production, storyboarding, prompting, AI generation, editing, and review share the same project context.
+- **Explicit canvas-reference contracts:** every `@` reference declares what it controls, reducing drift in characters, packaging, logos, locations, and style.
+- **Closed-loop generation QA:** every media call has preconditions, acceptance checks, rejection reasons, and regeneration guidance.
+- **Creative language becomes production action:** vague notes such as “more premium” or “more impactful” are translated into camera, lighting, pacing, sound, and prompt changes.
+- **Safe capability fallback:** when a component is missing, the Agent returns executable prompts and action lists instead of fabricating tool results.
 
 ### Capabilities
 
@@ -168,6 +203,19 @@ The Agent identifies the current production stage, checks whether critical input
 4. Connect the text, image, video, multimodal, composition, preview, and save components your workflow actually needs.
 5. Follow [`lumina-canvas-setup.md`](lumina-tvc-ai-director/references/lumina-canvas-setup.md) for node aliases, tool descriptions, acceptance checks, and test cases.
 
+### Lumina import-safe format
+
+To avoid “Some documents need to be processed / documents have not been uploaded” errors:
+
+- Import the `lumina-tvc-ai-director` folder only; do not upload a local Git working directory containing development artifacts.
+- Keep only `.md`, `.txt`, `.json`, `.yaml`, or `.yml` files inside the skill package.
+- Do not include `.skillignore`, `.gitignore`, `.DS_Store`, extensionless files, scripts, images, ZIP files, or other unsupported formats.
+- Use only letters, numbers, underscores, and hyphens in file and folder names, with a maximum length of 64 characters.
+- Keep extensions lowercase. The entry file must be named exactly `SKILL.md`.
+- Place `SKILL.md` at the root of the imported folder and preserve its YAML frontmatter.
+
+The `lumina-tvc-ai-director` folder in this repository already follows these rules and contains only supported Markdown files. The `.skillignore` shown in the error screenshot is not part of this Skill and should not be added to the import package.
+
 Without connected media-generation components, the Agent can still deliver strategy, proposals, treatments, PPMs, storyboards, prompts, production plans, edit plans, and review analysis. It will return executable text and tables instead of pretending to have generated media.
 
 ### Scope and limitations
@@ -176,12 +224,11 @@ Without connected media-generation components, the Agent can still deliver strat
 - Available models, parameters, and components depend on the current Lumina account and UI. The Skill intentionally avoids hard-coding volatile model names.
 - Brand claims, legal clearance, copyright, likeness rights, packaging accuracy, and client approvals remain human responsibilities.
 
-## References and attribution
+## Lumina references
 
-- Upstream workflow: [guangjun5952/tvc-ai-director](https://github.com/guangjun5952/tvc-ai-director)
 - Lumina introduction: [BytePlus documentation](https://docs.byteplus.com/en/docs/seedream/lumina-introduction-page)
 - Lumina Canvas guide: [BytePlus documentation](https://docs.byteplus.com/en/docs/seedream/lumina-canvas-user-guide)
 
 ## License
 
-MIT. See [LICENSE](LICENSE). The upstream copyright notice is preserved as required by the original license.
+MIT. See [LICENSE.md](LICENSE.md).
